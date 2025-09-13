@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Test Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #e8f5e9;
+            --text-color: #333;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .upload-card {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .upload-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .file-upload-btn:hover {
+            background-color: #2c6e2f;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        select {
+            background-color: var(--card-background);
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #ffc107;
+            color: var(--text-color);
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ffb300;
+        }
+
+        #response-container {
+            display: none;
+            background-color: var(--card-background);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        #response-container h2 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .response-section {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .response-section:last-child {
+            border-bottom: none;
+        }
+
+        .response-section h3 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .response-section p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        @media (min-width: 600px) {
+            .form-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
+
+            select, button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Soil Test Advisor 🌱</h1>
+        <div class="upload-card">
+            <h2>Get Your Farming Plan</h2>
+            <form id="soilForm">
+                <label for="soil_report" class="file-upload-btn">
+                    Upload Soil Report
+                </label>
+                <input type="file" id="soil_report" name="soil_report" accept="image/*,application/pdf">
+                <div class="form-actions">
+                    <select id="language" name="language">
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Punjabi">Punjabi</option>
+                    </select>
+                    <button type="submit">Analyze</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="response-container">
+            </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('soilForm');
+        const responseContainer = document.getElementById('response-container');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('soil_report');
+            const language = document.getElementById('language').value;
+            if (!fileInput.files.length) {
+                alert("Please upload a soil report file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('soil_report', fileInput.files[0]);
+            formData.append('language', language);
+
+            responseContainer.innerHTML = `<h2>Analysis Result:</h2><p>Analyzing... Please wait ⏳</p>`;
+            responseContainer.style.display = 'block';
+
+            try {
+                const res = await fetch('/analyze-image/', { method: 'POST', body: formData });
+                const sections = await res.json();
+                
+                if (res.ok) {
+                    responseContainer.innerHTML = '<h2>Analysis Result:</h2>';
+                    sections.forEach(section => {
+                        const sectionDiv = document.createElement('div');
+                        sectionDiv.className = 'response-section';
+                        
+                        const titleEl = document.createElement('h3');
+                        titleEl.textContent = section.title;
+                        sectionDiv.appendChild(titleEl);
+                        
+                        const textEl = document.createElement('p');
+                        textEl.textContent = section.text;
+                        sectionDiv.appendChild(textEl);
+                        
+                        const audioEl = document.createElement('audio');
+                        audioEl.controls = true;
+                        audioEl.src = section.audio_url;
+                        sectionDiv.appendChild(audioEl);
+                        
+                        responseContainer.appendChild(sectionDiv);
+                    });
+                } else {
+                    responseContainer.innerHTML = `<h2>Error:</h2><p>${sections.error || "Something went wrong!"}</p>`;
+                }
+            } catch (err) {
+                console.error(err);
+                responseContainer.innerHTML = `<h2>Error:</h2><p>Error connecting to server.</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
