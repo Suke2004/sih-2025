@@ -17,7 +17,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["AUDIO_FOLDER"], exist_ok=True)
 
 # Configure Gemini
-genai.configure(api_key="AIzaSyAOe2gm5kAouvpMBgQxzcw7h0k7PS_bJsc")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY")
 
 SYSTEM_PROMPT = """
 You are an expert agricultural advisor for farmers in Punjab, India. 
